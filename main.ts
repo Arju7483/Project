@@ -1,107 +1,92 @@
 console.log("Script loaded");
-interface Todo{
+
+interface Todo {
   id: number;
-  taskName : string;
+  taskName: string;
   completed: boolean;
 }
-let TodoList : Todo[] = [];
+
+let TodoList: Todo[] = JSON.parse(localStorage.getItem("todos") || "[]");
 let deleteTargetId: number | null = null;
-const message = document.getElementById("message") as HTMLParagraphElement;
 
+const form = document.getElementById("form-id") as HTMLFormElement;
+//console.log(form);
+const input = document.getElementById("input-id") as HTMLInputElement;
+    //console.log(input);
+const list = document.getElementById("list-id") as HTMLUListElement;
 const modal = document.getElementById("modal") as HTMLDivElement;
-const confirmDeleteBtn = document.getElementById("confirm-delete")!;
-const cancelDeleteBtn = document.getElementById("cancel-delete")!;
+const confirmDeleteBtn = document.getElementById("confirm-delete");
+//console.log(confirmDeleteBtn);
+const cancelDeleteBtn = document.getElementById("cancel-delete");
 
-document.getElementById("form-id")?.addEventListener("submit", function(event) {
+form.addEventListener("submit", function (event) {
   event.preventDefault();
-  const inputTask = (document.getElementById("input-id") as HTMLInputElement).value.trim();
-  console.log("Task:", inputTask);
-  //names.push(inputTask);
-  
-  if(inputTask){
+  const inputTask = input.value.trim();
+
+  if (inputTask) {
     const newtodo: Todo = {
       id: Date.now(),
       taskName: inputTask,
-      completed: false
-    }
+      completed: false,
+    };
     TodoList.push(newtodo);
+    saveTodos();
     renderTodos();
-    
-    // const deletebutton = document.createElement("button");
-    // deletebutton.textContent = "delete";
-    // deletebutton.id = "delete-id";
-    // list.appendChild(deletebutton);
+    input.value = "";
   }
-  
-  alert("added");
+  alert("task added");
 });
 
-  function renderTodos() { 
-    const list = document.getElementById("list-id") as HTMLUListElement;
-    list.innerHTML = ""; // Clear old content
+function renderTodos(): void {
+  list.innerHTML = "";
+   console.log(Date.now());
+  TodoList.forEach((todo) => {
+    const li = document.createElement("li");
+    li.textContent = todo.taskName;
+    li.classList.toggle("completed", todo.completed);
+    li.dataset.id = todo.id.toString();
 
-    console.log("TodoList: ", TodoList);
+    // Toggle completed on double-click
+    li.ondblclick = () => {
+      todo.completed = !todo.completed;
+      saveTodos();
+      renderTodos();
+    };
 
-    TodoList.forEach(todo => {
-      const li = document.createElement("li");
-      li.textContent = todo.taskName;
-      li.classList.toggle("completed", todo.completed);
-      li.dataset.id = todo.id.toString();
+    // Create delete button
+    const delBtn = document.createElement("button");
+    delBtn.textContent = "X";
+    delBtn.onclick = (e) => {
+      e.stopPropagation();
+      deleteTargetId = todo.id;
+      modal.classList.remove("hidden");
+    };
 
-      // Double-click to toggle completed
-      li.ondblclick = () => {
-        todo.completed = !todo.completed;
-        saveTodos();
-        renderTodos();
-      };
-
-      // Create delete button
-      const delBtn = document.createElement("button");
-      delBtn.textContent = "❌";
-      delBtn.onclick = (e) => {
-        e.stopPropagation(); // Prevents double-click toggle
-        deleteTargetId = todo.id;
-        modal.classList.remove("hidden"); // Show modal
-      };
-
-      li.appendChild(delBtn);
-      list.appendChild(li);
-    });
-  }
-const saveTodos = (): void => {
-    localStorage.setItem('todos', JSON.stringify(TodoList));
+    li.appendChild(delBtn);
+    list.appendChild(li);
+  });
 }
 
+const saveTodos = (): void => {
+  localStorage.setItem("todos", JSON.stringify(TodoList));
+};
 
-
-
-// Modal Confirmation
+// Confirm Deletion
 confirmDeleteBtn.addEventListener("click", () => {
   if (deleteTargetId !== null) {
-    TodoList = TodoList.filter(todo => todo.id !== deleteTargetId);
-    // saveTodos();
-
-    console.log(TodoList);
-
-    //renderTodos();
+    TodoList = TodoList.filter((todo) => todo.id !== deleteTargetId);
+    saveTodos();
+    renderTodos();
     deleteTargetId = null;
     modal.classList.add("hidden");
   }
 });
 
+// Cancel Deletion
 cancelDeleteBtn.addEventListener("click", () => {
   deleteTargetId = null;
   modal.classList.add("hidden");
 });
 
-// shows the delete confirmation modal
-const promptDelete = (id: string): void => {
-    deleteTargetId = id;
-    deleteModal.classList.remove('hidden');
-}
-
-// hides the delete confirmation modal
-const hideModal = (): void => {
-    todoIdToDelete = null;
-    deleteModal.classList.add('hidden');
-}
+// Initial render on load
+renderTodos();
