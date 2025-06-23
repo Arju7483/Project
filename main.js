@@ -1,41 +1,40 @@
-var _a;
 console.log("Script loaded");
-var TodoList = [];
+var TodoList = JSON.parse(localStorage.getItem("todos") || "[]");
 var deleteTargetId = null;
-var message = document.getElementById("message");
+var form = document.getElementById("form-id");
+//console.log(form);
+var input = document.getElementById("input-id");
+//console.log(input);
+var list = document.getElementById("list-id");
 var modal = document.getElementById("modal");
 var confirmDeleteBtn = document.getElementById("confirm-delete");
+//console.log(confirmDeleteBtn);
 var cancelDeleteBtn = document.getElementById("cancel-delete");
-(_a = document.getElementById("form-id")) === null || _a === void 0 ? void 0 : _a.addEventListener("submit", function (event) {
+form.addEventListener("submit", function (event) {
     event.preventDefault();
-    var inputTask = document.getElementById("input-id").value.trim();
-    console.log("Task:", inputTask);
-    //names.push(inputTask);
+    var inputTask = input.value.trim();
     if (inputTask) {
         var newtodo = {
             id: Date.now(),
             taskName: inputTask,
-            completed: false
+            completed: false,
         };
         TodoList.push(newtodo);
+        saveTodos();
         renderTodos();
-        // const deletebutton = document.createElement("button");
-        // deletebutton.textContent = "delete";
-        // deletebutton.id = "delete-id";
-        // list.appendChild(deletebutton);
+        input.value = "";
     }
-    alert("added");
+    alert("task added");
 });
 function renderTodos() {
-    var list = document.getElementById("list-id");
-    list.innerHTML = ""; // Clear old content
-    console.log("TodoList: ", TodoList);
+    list.innerHTML = "";
+    console.log(Date.now());
     TodoList.forEach(function (todo) {
         var li = document.createElement("li");
         li.textContent = todo.taskName;
         li.classList.toggle("completed", todo.completed);
         li.dataset.id = todo.id.toString();
-        // Double-click to toggle completed
+        // Toggle completed on double-click
         li.ondblclick = function () {
             todo.completed = !todo.completed;
             saveTodos();
@@ -43,41 +42,33 @@ function renderTodos() {
         };
         // Create delete button
         var delBtn = document.createElement("button");
-        delBtn.textContent = "❌";
+        delBtn.textContent = "X";
         delBtn.onclick = function (e) {
-            e.stopPropagation(); // Prevents double-click toggle
+            e.stopPropagation();
             deleteTargetId = todo.id;
-            modal.classList.remove("hidden"); // Show modal
+            modal.classList.remove("hidden");
         };
         li.appendChild(delBtn);
         list.appendChild(li);
     });
 }
 var saveTodos = function () {
-    localStorage.setItem('todos', JSON.stringify(TodoList));
+    localStorage.setItem("todos", JSON.stringify(TodoList));
 };
-// Modal Confirmation
+// Confirm Deletion
 confirmDeleteBtn.addEventListener("click", function () {
     if (deleteTargetId !== null) {
         TodoList = TodoList.filter(function (todo) { return todo.id !== deleteTargetId; });
-        // saveTodos();
-        console.log(TodoList);
-        //renderTodos();
+        saveTodos();
+        renderTodos();
         deleteTargetId = null;
         modal.classList.add("hidden");
     }
 });
+// Cancel Deletion
 cancelDeleteBtn.addEventListener("click", function () {
     deleteTargetId = null;
     modal.classList.add("hidden");
 });
-// shows the delete confirmation modal
-var promptDelete = function (id) {
-    deleteTargetId = id;
-    deleteModal.classList.remove('hidden');
-};
-// hides the delete confirmation modal
-var hideModal = function () {
-    todoIdToDelete = null;
-    deleteModal.classList.add('hidden');
-};
+// Initial render on load
+renderTodos();
